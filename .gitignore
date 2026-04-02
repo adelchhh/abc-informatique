@@ -1,0 +1,45 @@
+# IDE & Editeurs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# PHP & Composer
+vendor/
+composer.lock
+
+# Laravel
+.env
+.env.local
+.env.backup
+storage/
+bootstrap/cache/
+
+# Build
+dist/
+build/
+
+# System
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Tests
+coverage/
+.phpunit.result.cache
+
+# OS
+.AppleDouble
+.LSOverride
