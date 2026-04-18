@@ -41,7 +41,7 @@ const OrderDetail = ({ order, onClose, onUpdate, onDelete, loading }) => {
 
       console.log('Envoi de la requête DELETE vers /api/orders/' + order.id);
 
-      const response = await fetch(`http://localhost:8000/api/orders/${order.id}`, {
+      const response = await fetch(`https://abcinformatique.org/api/orders/${order.id}`, {
         method: 'DELETE',
         headers: getHeaders(),
       });
@@ -92,7 +92,7 @@ const OrderDetail = ({ order, onClose, onUpdate, onDelete, loading }) => {
       console.log('Token:', token.substring(0, 20) + '...');
       console.log('Données:', formData);
 
-      const response = await fetch(`http://localhost:8000/api/orders/${order.id}`, {
+      const response = await fetch(`https://abcinformatique.org/api/orders/${order.id}`, {
         method: 'PUT',
         headers: getHeaders(),
         body: JSON.stringify(formData),
@@ -206,7 +206,7 @@ const OrderDetail = ({ order, onClose, onUpdate, onDelete, loading }) => {
               <div>
                 <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Prix</p>
                 <p className="text-2xl font-bold text-blue-600 mt-1">
-                  {order.product_price.toFixed(2)} DA
+                  {Number(order.product_price ?? 0).toFixed(2)} DA
                 </p>
               </div>
               <div>

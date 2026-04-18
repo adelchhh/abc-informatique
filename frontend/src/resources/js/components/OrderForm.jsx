@@ -87,7 +87,7 @@ const OrderForm = ({ product, onSubmit, onCancel }) => {
         adresse: `${formData.wilaya}, ${formData.commune}`,
       };
 
-      const response = await fetch('/api/orders', {
+      const response = await fetch('https://abcinformatique.org/api/orders', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -202,11 +202,11 @@ const OrderForm = ({ product, onSubmit, onCancel }) => {
           <div className="text-right">
             <p className="text-sm text-gray-600 mb-1">À l'unité:</p>
             <p className="text-xl font-bold text-blue-600 mb-3">
-              {product.prix.toFixed(2)} DA
+              {Number(product.prix ?? 0).toFixed(2)} DA
             </p>
             <div className="text-sm text-gray-600 mb-1">Total:</div>
             <p className="text-3xl font-bold text-green-600">
-              {(product.prix * formData.quantité).toFixed(2)} DA
+              {(Number(product.prix ?? 0) * formData.quantité).toFixed(2)} DA
             </p>
           </div>
         </div>

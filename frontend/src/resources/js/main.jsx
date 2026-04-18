@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route } from 'react-router-dom';
 import '../css/app.css';
 import ClientPage from './components/ClientPage';
 import AdminDashboard from './components/AdminDashboard';
@@ -9,7 +9,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
         <Route path="/" element={<ClientPage />} />
         <Route path="/login" element={<LoginPage />} />
@@ -23,7 +23,7 @@ function App() {
         />
         <Route path="*" element={<ClientPage />} />
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 

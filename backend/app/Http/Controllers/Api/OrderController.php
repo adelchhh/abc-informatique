@@ -19,8 +19,8 @@ class OrderController extends Controller
     public function index(): JsonResponse
     {
         try {
-            $orders = Order::with('product')
-                ->select('id', 'nom', 'telephone', 'adresse', 'product_id', 'product_name', 'product_price', 'quantite', 'statut', 'note_client', 'livreur_nom', 'date_livraison', 'created_at', 'updated_at')
+            $orders = Order::query()
+                ->select('id', 'nom', 'telephone', 'adresse', 'product_id', 'product_name', 'product_price', 'statut', 'note_client', 'livreur_nom', 'date_livraison', 'created_at', 'updated_at')
                 ->orderBy('created_at', 'desc')
                 ->get();
 

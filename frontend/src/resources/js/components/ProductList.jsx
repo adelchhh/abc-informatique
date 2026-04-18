@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { FaSearch } from 'react-icons/fa';
+import ProductRequestForm from './ProductRequestForm';
+import { useProducts } from '../hooks/useProducts';
 
 const ProductList = ({ onSelectProduct }) => {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { products, loading, error, fetchProducts } = useProducts();
   const [searchTerm, setSearchTerm] = useState('');
   const [priceFilter, setPriceFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -17,37 +17,6 @@ const ProductList = ({ onSelectProduct }) => {
     { id: 'modem', label: 'Modems & Routeurs', icon: ' ', image: '/images/modem.jpg' },
     { id: 'autre', label: 'Autre', icon: ' ', image: '/images/autre.jpg' },
   ];
-
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  const fetchProducts = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const response = await fetch('/api/products', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Erreur lors du chargement des produits');
-      }
-
-      const data = await response.json();
-      setProducts(data.data || []);
-    } catch (err) {
-      setError(err.message);
-      console.error('Erreur:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.nom.toLowerCase().includes(searchTerm.toLowerCase());
@@ -613,13 +582,13 @@ const ProductList = ({ onSelectProduct }) => {
                 {/* Background Image */}
                 {product.images && Array.isArray(product.images) && product.images.length > 0 ? (
                   <img
-                    src={`http://localhost:8000/storage/${product.images[0]}`}
+                    src={`https://abcinformatique.org/${product.images[0]}`}
                     alt={product.nom}
                     className="product-image-full"
                   />
                 ) : product.image ? (
                   <img
-                    src={`http://localhost:8000/storage/${product.image}`}
+                    src={`https://abcinformatique.org/${product.image}`}
                     alt={product.nom}
                     className="product-image-full"
                   />
@@ -652,11 +621,11 @@ const ProductList = ({ onSelectProduct }) => {
                       <>
                         <div className="flex flex-col gap-1">
                           <span className="text-sm text-gray-200 line-through">
-                            {product.prix_original?.toFixed(2)} DA
+                            {Number(product.prix_original ?? 0).toFixed(2)} DA
                           </span>
                           <div className="flex items-baseline gap-1">
                             <span className="price-value-full">
-                              {product.prix_promo?.toFixed(2)}
+                              {Number(product.prix_promo ?? 0).toFixed(2)}
                             </span>
                             <span className="price-currency-full">DA</span>
                           </div>
@@ -665,7 +634,7 @@ const ProductList = ({ onSelectProduct }) => {
                     ) : (
                       <>
                         <span className="price-value-full">
-                          {product.prix.toFixed(2)}
+                          {Number(product.prix ?? 0).toFixed(2)}
                         </span>
                         <span className="price-currency-full">DA</span>
                       </>
@@ -685,6 +654,12 @@ const ProductList = ({ onSelectProduct }) => {
           </div>
         </>
       )}
+
+      {/* Séparateur */}
+      <div className="my-16 border-t-2 border-gray-300"></div>
+
+      {/* Formulaire de demande de produit */}
+      <ProductRequestForm />
     </div>
   );
 };

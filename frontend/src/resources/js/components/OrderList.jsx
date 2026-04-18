@@ -88,7 +88,7 @@ const OrderList = ({ orders, onSelectOrder, onRefresh, filterStatus }) => {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm font-bold text-blue-600">
-                    {order.product_price.toFixed(2)} DA
+                    {Number(order.product_price ?? 0).toFixed(2)} DA
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-600">
                     {new Date(order.created_at).toLocaleDateString('fr-FR', {

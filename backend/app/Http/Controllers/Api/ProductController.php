@@ -8,7 +8,6 @@ use App\Http\Requests\UpdateProductRequest;
 use App\Models\Product;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
@@ -83,70 +82,77 @@ class ProductController extends Controller
     public function store(StoreProductRequest $request): JsonResponse
     {
         try {
-            \Log::info('StoreProduct - Début du processus', ['all_request' => $request->all()]);
             $validated = $request->validated();
-            \Log::info('StoreProduct - Données validées:', $validated);
-
-            // Gérer l'upload des images multiples
+            
+            // Créer le dossier s'il n'existe pas
+            $storageDir = public_path('storage/products');
+            if (!is_dir($storageDir)) {
+                mkdir($storageDir, 0755, true);
+            }
+            
+            // Upload des images multiples ou single
             $imagePaths = [];
+            
+            // Traiter images[] (multiples - préféré)
             if ($request->hasFile('images')) {
-                \Log::info('StoreProduct - Fichiers trouvés en images[]');
-                $files = $request->file('images');
-                // S'assurer que c'est un tableau
-                if (!is_array($files)) {
-                    $files = [$files];
-                }
-                \Log::info('StoreProduct - Nombre de fichiers:', ['count' => count($files)]);
-                
-                foreach ($files as $file) {
-                    if ($file instanceof \Illuminate\Http\UploadedFile) {
-                        \Log::info('StoreProduct - Upload fichier:', ['name' => $file->getClientOriginalName()]);
-                        $path = $file->store('products', 'public');
+                foreach ($request->file('images') as $file) {
+                    $filename = uniqid() . '.' . $file->getClientOriginalExtension();
+                    $file->move($storageDir, $filename);
+                    $path = 'storage/products/' . $filename;
+                    if ($path) {
                         $imagePaths[] = $path;
-                        \Log::info('StoreProduct - Fichier sauvegardé:', ['path' => $path]);
                     }
                 }
-            } elseif ($request->hasFile('image')) {
-                // Support de l'image unique (compatibilité avec l'ancienne version)
-                \Log::info('StoreProduct - Image unique trouvée');
-                $file = $request->file('image');
-                $path = $file->store('products', 'public');
-                $validated['image'] = $path;
-            } else {
-                \Log::warning('StoreProduct - Aucun fichier image trouvé');
             }
-
-            // Ajouter les images au validated si présentes
+            // Traiter image (single - compatibilité)
+            elseif ($request->hasFile('image')) {
+                $file = $request->file('image');
+                $filename = uniqid() . '.' . $file->getClientOriginalExtension();
+                $file->move($storageDir, $filename);
+                $path = 'storage/products/' . $filename;
+                if ($path) {
+                    $imagePaths[] = $path;
+                }
+            }
+            
+            // Ajouter les images au validated
             if (!empty($imagePaths)) {
                 $validated['images'] = $imagePaths;
-                \Log::info('StoreProduct - Images à sauvegarder:', ['paths' => $imagePaths]);
             }
-
-            \Log::info('StoreProduct - Avant création du produit:', $validated);
+            
+            // Créer le produit
             $product = Product::create($validated);
-            \Log::info('StoreProduct - Produit créé avec succès:', ['id' => $product->id]);
-
+            
             return response()->json([
                 'success' => true,
                 'message' => 'Produit créé avec succès',
                 'data' => $product,
             ], 201);
+            
         } catch (\Illuminate\Validation\ValidationException $e) {
-            \Log::error('StoreProduct - Erreur de validation:', $e->errors());
-            \Log::error('StoreProduct - Request all:', $request->all());
             return response()->json([
                 'success' => false,
                 'message' => 'Erreur de validation',
                 'errors' => $e->errors(),
             ], 422);
         } catch (\Exception $e) {
-            \Log::error('StoreProduct - Exception:', ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la création du produit',
-                'error' => env('APP_DEBUG') ? $e->getMessage() : 'Erreur serveur',
+                'message' => $e->getMessage(),
             ], 500);
         }
+    }
+    
+    /**
+     * Format bytes en taille lisible
+     */
+    private function formatBytes(int $bytes, int $precision = 2): string
+    {
+        $units = ['B', 'KB', 'MB', 'GB'];
+        for ($i = 0; $bytes > 1024 && $i < count($units) - 1; $i++) {
+            $bytes /= 1024;
+        }
+        return round($bytes, $precision) . ' ' . $units[$i];
     }
 
     /**
@@ -205,8 +211,9 @@ class ProductController extends Controller
             foreach ($imagesToRemove as $indexToRemove) {
                 if (isset($currentImages[$indexToRemove])) {
                     $imageToDelete = $currentImages[$indexToRemove];
-                    if (Storage::disk('public')->exists($imageToDelete)) {
-                        Storage::disk('public')->delete($imageToDelete);
+                    $fullPath = public_path($imageToDelete);
+                    if (file_exists($fullPath)) {
+                        unlink($fullPath);
                         \Log::info('UpdateProduct - Image supprimée:', ['path' => $imageToDelete]);
                     }
                 }
@@ -214,6 +221,13 @@ class ProductController extends Controller
 
             // Ajouter les nouvelles images
             $finalImages = $imagesToKeep;
+            
+            // Créer le dossier s'il n'existe pas
+            $storageDir = public_path('storage/products');
+            if (!is_dir($storageDir)) {
+                mkdir($storageDir, 0755, true);
+            }
+            
             if ($request->hasFile('images')) {
                 $files = $request->file('images');
                 if (!is_array($files)) {
@@ -221,7 +235,9 @@ class ProductController extends Controller
                 }
                 foreach ($files as $file) {
                     if ($file instanceof \Illuminate\Http\UploadedFile) {
-                        $path = $file->store('products', 'public');
+                        $filename = uniqid() . '.' . $file->getClientOriginalExtension();
+                        $file->move($storageDir, $filename);
+                        $path = 'storage/products/' . $filename;
                         $finalImages[] = $path;
                         \Log::info('UpdateProduct - Nouvelle image ajoutée:', ['path' => $path]);
                     }
@@ -229,13 +245,16 @@ class ProductController extends Controller
             } elseif ($request->hasFile('image')) {
                 // Support de l'image unique (compatibilité avec l'ancienne version)
                 $file = $request->file('image');
-                $path = $file->store('products', 'public');
+                $filename = uniqid() . '.' . $file->getClientOriginalExtension();
+                $file->move($storageDir, $filename);
+                $path = 'storage/products/' . $filename;
                 $validated['image'] = $path;
                 // Supprimer les anciennes images si on envoie une image unique en PUT
                 if ($product->images && is_array($product->images)) {
                     foreach ($product->images as $oldImage) {
-                        if (Storage::disk('public')->exists($oldImage)) {
-                            Storage::disk('public')->delete($oldImage);
+                        $fullPath = public_path($oldImage);
+                        if (file_exists($fullPath)) {
+                            unlink($fullPath);
                         }
                     }
                 }
@@ -295,12 +314,30 @@ class ProductController extends Controller
 
             $productName = $product->nom;
             
-            // Supprimer l'image si elle existe
-            if ($product->image && Storage::disk('public')->exists($product->image)) {
-                Storage::disk('public')->delete($product->image);
+            // Supprimer l'image unique si elle existe
+            if ($product->image) {
+                $fullPath = public_path($product->image);
+                if (file_exists($fullPath)) {
+                    unlink($fullPath);
+                    \Log::info('DeleteProduct - Image unique supprimée:', ['path' => $product->image]);
+                }
+            }
+            
+            // Supprimer les images multiples si elles existent
+            if ($product->images && is_array($product->images)) {
+                foreach ($product->images as $imagePath) {
+                    if ($imagePath) {
+                        $fullPath = public_path($imagePath);
+                        if (file_exists($fullPath)) {
+                            unlink($fullPath);
+                            \Log::info('DeleteProduct - Image supprimée:', ['path' => $imagePath]);
+                        }
+                    }
+                }
             }
             
             $product->delete();
+            \Log::info('DeleteProduct - Produit supprimé complètement:', ['id' => $product->id]);
 
             return response()->json([
                 'success' => true,

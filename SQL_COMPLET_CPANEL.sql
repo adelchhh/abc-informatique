@@ -1,11 +1,10 @@
 -- ============================================================
--- SCHÉMA DE LA BASE DE DONNÉES - E-COMMERCE INFORMATIQUE
+-- SCHÉMA COMPLET DE LA BASE DE DONNÉES - ABC INFORMATIQUE
+-- ============================================================
+-- Copie-colle tout ce code dans phpMyAdmin SQL et exécute!
 -- ============================================================
 
--- ============================================================
 -- TABLE: products
--- Description: Contient les produits disponibles à la vente
--- ============================================================
 CREATE TABLE IF NOT EXISTS products (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     nom VARCHAR(255) NOT NULL,
@@ -18,23 +17,19 @@ CREATE TABLE IF NOT EXISTS products (
     INDEX idx_prix (prix)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-
--- ============================================================
 -- TABLE: orders
--- Description: Contient les commandes des clients
--- ============================================================
 CREATE TABLE IF NOT EXISTS orders (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     nom VARCHAR(255) NOT NULL,
     telephone VARCHAR(30) NOT NULL,
     adresse LONGTEXT NOT NULL,
     product_id BIGINT NULL,
-    product_name VARCHAR(255) NOT NULL COMMENT 'Copie du nom du produit au moment de la commande',
-    product_price DECIMAL(10, 2) NOT NULL COMMENT 'Copie du prix du produit au moment de la commande',
+    product_name VARCHAR(255) NOT NULL,
+    product_price DECIMAL(10, 2) NOT NULL,
     statut ENUM('en_attente', 'confirmé', 'livré') NOT NULL DEFAULT 'en_attente',
     note_client LONGTEXT NULL,
-    livreur_nom VARCHAR(255) NULL COMMENT 'Nom du livreur assigné (si applicable)',
-    date_livraison TIMESTAMP NULL COMMENT 'Date estimée ou réelle de livraison',
+    livreur_nom VARCHAR(255) NULL,
+    date_livraison TIMESTAMP NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL,
@@ -45,11 +40,7 @@ CREATE TABLE IF NOT EXISTS orders (
     INDEX idx_nom_client (nom)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-
--- ============================================================
 -- TABLE: users
--- Description: Contient les utilisateurs et administrateurs
--- ============================================================
 CREATE TABLE IF NOT EXISTS users (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL,
@@ -64,23 +55,15 @@ CREATE TABLE IF NOT EXISTS users (
     INDEX idx_role (role)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-
--- ============================================================
--- TABLE: cache
--- Description: Table de cache Laravel
--- ============================================================
+-- TABLE: cache (corrigée avec backticks)
 CREATE TABLE IF NOT EXISTS cache (
-    key VARCHAR(255) PRIMARY KEY,
+    `key` VARCHAR(255) PRIMARY KEY,
     value LONGTEXT NOT NULL,
     expiration INT NOT NULL,
     INDEX idx_expiration (expiration)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-
--- ============================================================
 -- TABLE: jobs
--- Description: Table des jobs en file d'attente
--- ============================================================
 CREATE TABLE IF NOT EXISTS jobs (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     queue VARCHAR(255) NOT NULL,
@@ -94,6 +77,21 @@ CREATE TABLE IF NOT EXISTS jobs (
     INDEX idx_available_at (available_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- TABLE: personal_access_tokens (pour Sanctum - Laravel Auth)
+CREATE TABLE IF NOT EXISTS personal_access_tokens (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    tokenable_type VARCHAR(255) NOT NULL,
+    tokenable_id BIGINT NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    token VARCHAR(64) NOT NULL UNIQUE,
+    abilities LONGTEXT NULL,
+    last_used_at TIMESTAMP NULL,
+    expires_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_tokenable (tokenable_type, tokenable_id),
+    INDEX idx_token (token)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
 -- DONNÉES D'EXEMPLE
@@ -101,9 +99,8 @@ CREATE TABLE IF NOT EXISTS jobs (
 
 -- Insérer un administrateur
 INSERT INTO users (name, email, role, password, created_at, updated_at) VALUES
-('Admin', 'admin@example.com', 'admin', '$2y$10$L8ZBCRc5LnyHhwl8K8.xReuQ8MpkVu6f8Dy65ONtuIq5w8j8cJaju', NOW(), NOW())
+('Admin ABC', 'admin@abcinformatique.com', 'admin', '$2y$10$L8ZBCRc5LnyHhwl8K8.xReuQ8MpkVu6f8Dy65ONtuIq5w8j8cJaju', NOW(), NOW())
 ON DUPLICATE KEY UPDATE name=VALUES(name);
-
 
 -- Insérer des produits
 INSERT INTO products (nom, description, prix, stock, created_at, updated_at) VALUES
@@ -115,55 +112,17 @@ INSERT INTO products (nom, description, prix, stock, created_at, updated_at) VAL
 ('Casque sans fil Sony', 'Casque audio avec réduction de bruit active', 249.99, 20, NOW(), NOW())
 ON DUPLICATE KEY UPDATE nom=VALUES(nom);
 
-
 -- Insérer des commandes d'exemple
 INSERT INTO orders (nom, telephone, adresse, product_id, product_name, product_price, statut, note_client, livreur_nom, date_livraison, created_at, updated_at) VALUES
 ('Mohamed Ali', '+216 98 123 456', '123 Rue de France, Tunis 1000', 1, 'Ordinateur Portable Dell XPS 13', 1299.99, 'en_attente', 'Livraison avant 17h si possible', NULL, NULL, NOW(), NOW()),
 ('Fatima Ben Salah', '+216 91 234 567', '456 Avenue Mohamed V, Sfax 3000', 3, 'Clavier mécanique RGB', 129.99, 'confirmé', NULL, 'Ahmed Chebbi', DATE_ADD(NOW(), INTERVAL 2 DAY), NOW(), NOW()),
-('Karim Khaled', '+216 97 876 543', '789 Rue du Hammam, Sousse 4000', 5, 'Disque SSD 1TB NVMe', 89.99, 'livré', 'Merci pour la livraison rapide', 'Salah Eddine', NOW(), NOW(), NOW());
-
-
--- ============================================================
--- RELATIONS ET NOTES IMPORTANTES
--- ============================================================
--- ✓ Une commande (orders) est liée à un produit (products) via product_id
--- ✓ Si un produit est supprimé, product_id devient NULL (SET NULL)
--- ✓ Les informations du produit au moment de la commande sont sauvegardées :
---   - product_name : Nom du produit au moment de la commande
---   - product_price : Prix du produit au moment de la commande
--- ✓ Cela évite les incohérences si le produit change ou est supprimé
--- ✓ Les dates de livraison permettent au gérant de planifier
--- ✓ Le champ livreur_nom permet d'assigner un livreur à chaque commande
--- ✓ Tous les champs importants ont des index pour optimiser les requêtes
+('Karim Khaled', '+216 97 876 543', '789 Rue du Hammam, Sousse 4000', 5, 'Disque SSD 1TB NVMe', 89.99, 'livré', 'Merci pour la livraison rapide', 'Salah Eddine', NOW(), NOW(), NOW())
+ON DUPLICATE KEY UPDATE nom=VALUES(nom);
 
 -- ============================================================
--- OPTIMISATIONS DE PERFORMANCE
+-- VÉRIFICATION - Ces requêtes doivent retourner des résultats
 -- ============================================================
--- Index sur statut : pour les filtres (en_attente, confirmé, livré)
--- Index sur created_at : pour les tri par date
--- Index sur product_id : pour les jointures
--- Index sur date_livraison : pour planifier les livraisons
--- Index sur nom : pour rechercher les clients
--- Charset utf8mb4 : support complet des caractères spéciaux (accents, emojis, etc.)
-
--- ============================================================
--- SÉCURITÉ ET MEILLEURES PRATIQUES
--- ============================================================
--- ✓ ON DELETE SET NULL : évite la suppression en cascade dangereuse
--- ✓ product_name et product_price : préservent l'historique des prix
--- ✓ Validations au niveau base de données (NOT NULL, UNIQUE, ENUM)
--- ✓ Timestamps automatiques (created_at, updated_at)
--- ✓ Index adéquats pour les performances de recherche et de tri
-
--- ============================================================
--- UTILISATION AVEC LARAVEL
--- ============================================================
--- Pour exécuter ce schéma manuellement :
---   mysql -u root -p < database/schema.sql
---
--- OU pour utiliser les migrations Laravel (RECOMMANDÉ) :
---   php artisan migrate
---
--- NOTE: Ce fichier est un backup du schéma SQL pur.
--- Les migrations Laravel dans database/migrations/ sont la source de vérité.
+-- SELECT * FROM products;
+-- SELECT * FROM orders;
+-- SELECT * FROM users;
 -- ============================================================

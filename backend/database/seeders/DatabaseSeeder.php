@@ -15,6 +15,16 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Créer un utilisateur administrateur
+        User::updateOrCreate(
+            ['email' => 'admin@example.com'],
+            [
+                'name' => 'Admin',
+                'password' => Hash::make('admin123'),
+                'role' => 'admin',
+            ]
+        );
+
         // Créer ou mettre à jour l'utilisateur super admin
         User::updateOrCreate(
             ['email' => 'adelchouia4@gmail.com'],

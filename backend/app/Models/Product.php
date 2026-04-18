@@ -26,6 +26,9 @@ class Product extends Model
     protected $casts = [
         'images' => 'array', // Convertir automatiquement en array/JSON
         'is_promo' => 'boolean', // Convertir en boolean
+        'prix' => 'float',
+        'prix_original' => 'float',
+        'prix_promo' => 'float',
     ];
 
     /**

@@ -30,7 +30,7 @@ const AdminManagement = ({ token }) => {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('http://localhost:8000/api/users/admins', {
+      const response = await fetch('https://abcinformatique.org/api/users/admins', {
         method: 'GET',
         headers: getHeaders(),
       });
@@ -77,7 +77,7 @@ const AdminManagement = ({ token }) => {
         throw new Error('Le mot de passe doit contenir au moins 8 caractères');
       }
 
-      const response = await fetch('http://localhost:8000/api/users/create-admin', {
+      const response = await fetch('https://abcinformatique.org/api/users/create-admin', {
         method: 'POST',
         headers: getHeaders(),
         body: JSON.stringify({
@@ -121,7 +121,7 @@ const AdminManagement = ({ token }) => {
     }
 
     try {
-      const response = await fetch(`http://localhost:8000/api/users/${adminId}`, {
+      const response = await fetch(`https://abcinformatique.org/api/users/${adminId}`, {
         method: 'DELETE',
         headers: getHeaders(),
       });

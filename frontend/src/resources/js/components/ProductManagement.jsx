@@ -42,7 +42,7 @@ const ProductManagement = ({ token }) => {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('http://localhost:8000/api/products', {
+      const response = await fetch('https://abcinformatique.org/api/products', {
         method: 'GET',
         headers: getHeaders(),
       });
@@ -151,8 +151,8 @@ const ProductManagement = ({ token }) => {
 
     try {
       const url = editingId
-        ? `http://localhost:8000/api/products/${editingId}`
-        : 'http://localhost:8000/api/products';
+        ? `https://abcinformatique.org/api/products/${editingId}`
+        : 'https://abcinformatique.org/api/products';
 
       const method = editingId ? 'PUT' : 'POST';
 
@@ -186,26 +186,42 @@ const ProductManagement = ({ token }) => {
       
       // Ajouter les nouvelles images
       if (formData.images && formData.images.length > 0) {
-        formData.images.forEach((image) => {
+        console.log('Ajout des images à FormData:');
+        formData.images.forEach((image, idx) => {
+          console.log(`  Image ${idx}: ${image.name} (${(image.size / 1024).toFixed(2)} KB)`);
           formDataToSend.append('images[]', image);
         });
-        console.log(`Envoi de ${formData.images.length} images`);
+        console.log(`✅ Envoi de ${formData.images.length} images`);
+      } else {
+        console.warn('⚠️ Aucune nouvelle image sélectionnée');
       }
       
-      console.log('Données FormData à envoyer - nom:', formData.nom, 'prix:', formData.prix, 'stock:', formData.stock, 'is_promo:', formData.isPromo, 'images:', formData.images.length);
+      // Log complet avant envoi
+      console.log('📤 FormData à envoyer:');
+      console.log(`  - nom: ${formData.nom}`);
+      console.log(`  - prix: ${formData.prix}`);
+      console.log(`  - stock: ${formData.stock}`);
+      console.log(`  - category: ${formData.category}`);
+      console.log(`  - is_promo: ${formData.isPromo}`);
+      console.log(`  - images[]:.length: ${formData.images.length}`);
+      console.log(`  - existingImages.length: ${formData.existingImages.length}`);
 
       const headers = {
         'Accept': 'application/json',
         'Authorization': `Bearer ${token}`,
+        // NE PAS mettre Content-Type: multipart/form-data
+        // Le navigateur le fera automatiquement avec FormData
       };
 
+      console.log(`📡 Envoi requête ${editingId ? 'UPDATE' : 'CREATE'}:`);
       const response = await fetch(url, {
-        method: editingId ? 'POST' : 'POST', // Toujours POST avec _method pour FormData
+        method: 'POST',  // Toujours POST (avec _method pour PUT)
         headers,
         body: formDataToSend,
       });
 
       const data = await response.json();
+      console.log('📥 Réponse serveur:', data);
 
       if (!response.ok) {
         console.error('Erreur API complète:', data);
@@ -267,12 +283,12 @@ const ProductManagement = ({ token }) => {
     if (product.images && Array.isArray(product.images) && product.images.length > 0) {
       product.images.forEach((img, index) => {
         existingImages.push({ path: img, id: index }); // Stocker le chemin
-        existingImagePreviews.push(`http://localhost:8000/storage/${img}`);
+        existingImagePreviews.push(`https://abcinformatique.org/storage/${img}`);
       });
     } else if (product.image) {
       // Sinon si c'est une seule image (legacy)
       existingImages.push({ path: product.image, id: 0 });
-      existingImagePreviews.push(`http://localhost:8000/storage/${product.image}`);
+      existingImagePreviews.push(`https://abcinformatique.org/storage/${product.image}`);
     }
     
     setFormData({
@@ -299,7 +315,7 @@ const ProductManagement = ({ token }) => {
     }
 
     try {
-      const response = await fetch(`http://localhost:8000/api/products/${id}`, {
+      const response = await fetch(`https://abcinformatique.org/api/products/${id}`, {
         method: 'DELETE',
         headers: getHeaders(),
       });
@@ -666,7 +682,7 @@ const ProductManagement = ({ token }) => {
               {product.image ? (
                 <div className="w-full h-48 overflow-hidden bg-gray-100">
                   <img
-                    src={`http://localhost:8000/storage/${product.image}`}
+                    src={`https://abcinformatique.org/storage/${product.image}`}
                     alt={product.nom}
                     className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
                   />
@@ -693,7 +709,7 @@ const ProductManagement = ({ token }) => {
                     <div>
                       <p className="text-gray-600 text-xs font-semibold">PRIX</p>
                       <p className="text-2xl font-bold text-blue-600">
-                        {product.prix.toFixed(2)} DA
+                        {Number(product.prix ?? 0).toFixed(2)} DA
                       </p>
                     </div>
                     <div>

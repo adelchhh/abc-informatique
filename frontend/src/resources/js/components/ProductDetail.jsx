@@ -50,13 +50,13 @@ const ProductDetail = ({ product, onBack, onOrderSubmit }) => {
             <div className="relative bg-white rounded-lg shadow-lg overflow-hidden">
               {product.images && Array.isArray(product.images) && product.images.length > 0 ? (
                 <img
-                  src={`http://localhost:8000/storage/${product.images[selectedImageIndex]}`}
+                  src={`https://abcinformatique.org/${product.images[selectedImageIndex]}`}
                   alt={product.nom}
                   className="w-full h-96 object-cover rounded-lg cursor-zoom-in"
                 />
               ) : product.image ? (
                 <img
-                  src={`http://localhost:8000/storage/${product.image}`}
+                  src={`https://abcinformatique.org/${product.image}`}
                   alt={product.nom}
                   className="w-full h-96 object-cover rounded-lg"
                 />
@@ -85,7 +85,7 @@ const ProductDetail = ({ product, onBack, onOrderSubmit }) => {
                       }`}
                     >
                       <img
-                        src={`http://localhost:8000/storage/${image}`}
+                        src={`https://abcinformatique.org/${image}`}
                         alt={`Image ${index + 1}`}
                         className={`w-full h-full object-cover transition-transform ${
                           selectedImageIndex === index ? 'scale-100' : 'hover:scale-110'
@@ -133,18 +133,18 @@ const ProductDetail = ({ product, onBack, onOrderSubmit }) => {
                 {product.is_promo ? (
                   <div className="space-y-2">
                     <p className="text-lg text-gray-400 line-through">
-                      {product.prix_original?.toFixed(2)} DA
+                      {Number(product.prix_original ?? 0).toFixed(2)} DA
                     </p>
                     <p className="text-4xl font-bold bg-gradient-to-r from-red-600 to-red-500 bg-clip-text text-transparent">
-                      {product.prix_promo?.toFixed(2)} DA
+                      {Number(product.prix_promo ?? 0).toFixed(2)} DA
                     </p>
                     <p className="text-sm text-green-600 font-semibold">
-                      Économisez {(product.prix_original - product.prix_promo).toFixed(2)} DA !
+                      Économisez {(Number(product.prix_original ?? 0) - Number(product.prix_promo ?? 0)).toFixed(2)} DA !
                     </p>
                   </div>
                 ) : (
                   <p className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                    {product.prix.toFixed(2)} DA
+                    {Number(product.prix ?? 0).toFixed(2)} DA
                   </p>
                 )}
               </div>
@@ -188,7 +188,7 @@ const ProductDetail = ({ product, onBack, onOrderSubmit }) => {
                         <p className="text-xs text-gray-600">Total:</p>
                         <p className="text-2xl font-bold text-blue-600">
                           {(
-                            (product.is_promo ? product.prix_promo : product.prix) * orderQuantity
+                            Number((product.is_promo ? product.prix_promo : product.prix) ?? 0) * orderQuantity
                           ).toFixed(2)} DA
                         </p>
                       </div>

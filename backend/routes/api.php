@@ -6,6 +6,8 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\ProductRequestController;
+use App\Http\Controllers\Api\StorageDiagnosticsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -45,6 +47,11 @@ Route::prefix('orders')->group(function () {
     Route::get('/{id}', [OrderController::class, 'show'])->where('id', '[0-9]+')->name('orders.show');
 });
 
+// Demandes de produits - POST uniquement (public)
+Route::prefix('product-requests')->group(function () {
+    Route::post('/', [ProductRequestController::class, 'store'])->name('product-requests.store');
+});
+
 // ============================================================
 // ROUTES PROTÉGÉES (Authentifiées - Nécessite token)
 // ============================================================
@@ -72,6 +79,20 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::prefix('orders')->group(function () {
             Route::put('/{id}', [OrderController::class, 'update'])->where('id', '[0-9]+')->name('orders.update');
             Route::delete('/{id}', [OrderController::class, 'destroy'])->where('id', '[0-9]+')->name('orders.destroy');
+        });
+
+        // Demandes de produits - Gestion (Admin)
+        Route::prefix('product-requests')->group(function () {
+            Route::get('/', [ProductRequestController::class, 'index'])->name('product-requests.index');
+            Route::get('/{id}', [ProductRequestController::class, 'show'])->where('id', '[0-9]+')->name('product-requests.show');
+            Route::put('/{id}', [ProductRequestController::class, 'update'])->where('id', '[0-9]+')->name('product-requests.update');
+            Route::delete('/{id}', [ProductRequestController::class, 'destroy'])->where('id', '[0-9]+')->name('product-requests.destroy');
+        });
+
+        // Diagnostic du stockage (Admin)
+        Route::prefix('storage')->group(function () {
+            Route::get('/diagnostics', [StorageDiagnosticsController::class, 'diagnostics'])->name('storage.diagnostics');
+            Route::get('/products', [StorageDiagnosticsController::class, 'listProducts'])->name('storage.products');
         });
     });
 

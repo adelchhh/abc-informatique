@@ -4,6 +4,7 @@ import OrderList from './OrderList';
 import OrderDetail from './OrderDetail';
 import ProductManagement from './ProductManagement';
 import AdminManagement from './AdminManagement';
+import ProductRequestManagement from './ProductRequestManagement';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -18,7 +19,7 @@ const AdminDashboard = () => {
   const handleLogout = async () => {
     try {
       // Appel API logout
-      await fetch('/api/auth/logout', {
+      await fetch('https://abcinformatique.org/api/auth/logout', {
         method: 'POST',
         headers: getHeaders(),
       });
@@ -59,7 +60,7 @@ const AdminDashboard = () => {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('/api/orders', {
+      const response = await fetch('https://abcinformatique.org/api/orders', {
         method: 'GET',
         headers: getHeaders(),
       });
@@ -69,7 +70,8 @@ const AdminDashboard = () => {
       }
 
       const data = await response.json();
-      const ordersData = data.data || [];
+      console.log("DATA API =", data);
+      const ordersData = Array.isArray(data) ? data : data.data || [];
       setOrders(ordersData);
 
       // Calculer les statistiques
@@ -201,6 +203,16 @@ const AdminDashboard = () => {
               }`}
             >
               Produits
+            </button>
+            <button
+              onClick={() => setActiveTab('product-requests')}
+              className={`flex items-center gap-2 px-6 py-2 rounded-t-lg font-semibold transition-all ${
+                activeTab === 'product-requests'
+                  ? 'bg-white text-blue-600 shadow-lg'
+                  : 'bg-blue-500/30 text-white hover:bg-blue-500/50'
+              }`}
+            >
+              📦 Demandes Produits
             </button>
             {userRole === 'super_admin' && (
               <button
@@ -355,6 +367,11 @@ const AdminDashboard = () => {
         {/* Contenu principal - Onglet Produits */}
         {activeTab === 'products' && (
           <ProductManagement token={localStorage.getItem('auth_token')} />
+        )}
+
+        {/* Contenu principal - Onglet Demandes de Produits */}
+        {activeTab === 'product-requests' && (
+          <ProductRequestManagement token={localStorage.getItem('auth_token')} />
         )}
 
         {/* Contenu principal - Onglet Administrateurs (Super Admin uniquement) */}
